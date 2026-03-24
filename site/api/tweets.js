@@ -1,11 +1,10 @@
-// Vercel Serverless Function — fetches last 5 tweets from @boff_05
+// Vercel Serverless Function — fetches tweets + user stats from @boff_05
 // Uses X API v2 with Bearer Token from environment variable
 
 export default async function handler(req, res) {
-    // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET');
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600'); // Cache 5 min
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
     const token = process.env.X_BEARER_TOKEN;
     if (!token) {
@@ -13,9 +12,9 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Step 1: Get user ID from username
+        // Step 1: Get user ID + public metrics from username
         const userRes = await fetch(
-            'https://api.twitter.com/2/users/by/username/boff_05',
+            'https://api.twitter.com/2/users/by/username/boff_05?user.fields=public_metrics,created_at',
             { headers: { 'Authorization': `Bearer ${token}` } }
         );
 
@@ -29,6 +28,8 @@ export default async function handler(req, res) {
 
         const userData = await userRes.json();
         const userId = userData.data?.id;
+        const userMetrics = userData.data?.public_metrics;
+        const userCreatedAt = userData.data?.created_at;
 
         if (!userId) {
             return res.status(404).json({ error: 'User not found' });
@@ -68,7 +69,15 @@ export default async function handler(req, res) {
             }
         }));
 
-        return res.status(200).json({ tweets });
+        // Step 4: Return tweets + user stats
+        return res.status(200).json({
+            tweets,
+            user: {
+                followers: userMetrics?.followers_count || 0,
+                tweet_count: userMetrics?.tweet_count || 0,
+                created_at: userCreatedAt
+            }
+        });
 
     } catch (err) {
         return res.status(500).json({ error: 'Internal error', detail: err.message });
