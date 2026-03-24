@@ -936,31 +936,31 @@
         <div class="intercepts-strip" id="intercepts-strip">
             <div class="intercept-item">
                 <div class="intercept-image-wrap">
-                    <img src="assets/not-boff-1.webp" alt="Unidentified Unit" loading="lazy">
+                    <img src="assets/not-boff-1.webp" alt="Unidentified Unit" loading="lazy" width="400" height="533">
                 </div>
                 <span class="intercept-label classified">// UNIT UNIDENTIFIED — SIGNAL INTERCEPTED</span>
             </div>
             <div class="intercept-item">
                 <div class="intercept-image-wrap">
-                    <img src="assets/not-boff-2.webp" alt="Multiple Units Detected" loading="lazy">
+                    <img src="assets/not-boff-2.webp" alt="Multiple Units Detected" loading="lazy" width="400" height="533">
                 </div>
                 <span class="intercept-label classified">// MULTIPLE UNITS — CLASSIFICATION PENDING</span>
             </div>
             <div class="intercept-item">
                 <div class="intercept-image-wrap">
-                    <img src="assets/not-boff-3.webp" alt="Unknown Unit" loading="lazy">
+                    <img src="assets/not-boff-3.webp" alt="Unknown Unit" loading="lazy" width="400" height="533">
                 </div>
                 <span class="intercept-label classified">// SECTOR UNREGISTERED</span>
             </div>
             <div class="intercept-item">
                 <div class="intercept-image-wrap">
-                    <img src="assets/not-boff-5.webp" alt="Intercepted Unit" loading="lazy">
+                    <img src="assets/not-boff-5.webp" alt="Intercepted Unit" loading="lazy" width="400" height="533">
                 </div>
                 <span class="intercept-label classified">// FREQUENCY MATCH — ORIGIN UNKNOWN</span>
             </div>
             <div class="intercept-item">
                 <div class="intercept-image-wrap">
-                    <img src="assets/not-boff-6.webp" alt="Detected Unit" loading="lazy">
+                    <img src="assets/not-boff-6.webp" alt="Detected Unit" loading="lazy" width="400" height="533">
                 </div>
                 <span class="intercept-label classified">// UNIT DETECTED — UNVERIFIED</span>
             </div>
@@ -991,7 +991,7 @@
         <div class="briefing-layout">
             <div>
                 <div class="briefing-portrait">
-                    <img src="assets/boff.jpg" alt="BOFF_05 — ZeroFive Unit" loading="lazy">
+                    <img src="assets/boff.jpg" alt="BOFF_05 — ZeroFive Unit" loading="lazy" width="240" height="300">
                 </div>
                 <p class="briefing-portrait-label">UNIT // BOFF_05 // ZEROFIVE SERIES</p>
             </div>
@@ -1036,8 +1036,8 @@
     </footer>
 
     <!-- GSAP -->
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js" defer></script>
 
     <script>
     (function() {
@@ -1385,12 +1385,24 @@
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
+            // IntersectionObserver: pause shader when hero is off-screen
+            let shaderVisible = true;
+            const heroSection = document.getElementById('hero');
+            if (heroSection && 'IntersectionObserver' in window) {
+                const observer = new IntersectionObserver(entries => {
+                    shaderVisible = entries[0].isIntersecting;
+                }, { threshold: 0 });
+                observer.observe(heroSection);
+            }
+
             function render(time) {
-                gl.useProgram(program);
-                gl.uniform1f(timeLoc, time * 0.001);
-                gl.uniform2f(resLoc, canvas.width, canvas.height);
-                gl.uniform2f(imgSizeLoc, image.naturalWidth, image.naturalHeight);
-                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                if (shaderVisible) {
+                    gl.useProgram(program);
+                    gl.uniform1f(timeLoc, time * 0.001);
+                    gl.uniform2f(resLoc, canvas.width, canvas.height);
+                    gl.uniform2f(imgSizeLoc, image.naturalWidth, image.naturalHeight);
+                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                }
                 requestAnimationFrame(render);
             }
 
@@ -1605,22 +1617,27 @@
             resize();
             window.addEventListener('resize', resize);
 
-            function render() {
-                const w = canvas.width;
-                const h = canvas.height;
-                const imageData = ctx.createImageData(w, h);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const v = Math.random() * 255;
-                    data[i] = v;
-                    data[i + 1] = v;
-                    data[i + 2] = v;
-                    data[i + 3] = 255;
+            // Throttle grain to ~12fps (every ~83ms) for CPU savings
+            let lastGrain = 0;
+            function render(time) {
+                if (time - lastGrain > 83) {
+                    lastGrain = time;
+                    const w = canvas.width;
+                    const h = canvas.height;
+                    const imageData = ctx.createImageData(w, h);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const v = Math.random() * 255;
+                        data[i] = v;
+                        data[i + 1] = v;
+                        data[i + 2] = v;
+                        data[i + 3] = 255;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
                 }
-                ctx.putImageData(imageData, 0, 0);
                 requestAnimationFrame(render);
             }
-            render();
+            requestAnimationFrame(render);
         }
 
 
@@ -1673,11 +1690,16 @@
                 reticle.classList.remove('visible');
             });
 
-            function update() {
-                curX += (mouseX - curX) * 0.15;
-                curY += (mouseY - curY) * 0.15;
-                reticle.style.left = curX + 'px';
-                reticle.style.top = curY + 'px';
+            // Throttle reticle to ~30fps
+            let lastReticle = 0;
+            function update(time) {
+                if (time - lastReticle > 33) {
+                    lastReticle = time;
+                    curX += (mouseX - curX) * 0.15;
+                    curY += (mouseY - curY) * 0.15;
+                    reticle.style.left = curX + 'px';
+                    reticle.style.top = curY + 'px';
+                }
                 requestAnimationFrame(update);
             }
             requestAnimationFrame(update);
