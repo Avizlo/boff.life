@@ -355,25 +355,30 @@
         }
 
         /* ============================================
-           VISUAL INTERCEPTS — IMAGE MOSAIC
+           VISUAL INTERCEPTS — HORIZONTAL ROW
            ============================================ */
         .intercepts {
             padding: 120px var(--h-pad);
         }
 
-        .intercepts-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            grid-auto-rows: minmax(180px, 1fr);
-            gap: 2px;
+        .intercepts-strip {
+            display: flex;
+            gap: 16px;
         }
 
         .intercept-item {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+
+        .intercept-image-wrap {
             position: relative;
+            width: 100%;
+            aspect-ratio: 3 / 4;
             overflow: hidden;
         }
 
-        .intercept-item img {
+        .intercept-image-wrap img {
             width: 100%; height: 100%;
             object-fit: cover;
             display: block;
@@ -381,12 +386,13 @@
             transition: filter 0.5s ease, transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
 
-        .intercept-item:hover img {
+        .intercept-item:hover .intercept-image-wrap img {
             filter: saturate(1) contrast(1.15);
             transform: scale(1.04);
         }
 
-        .intercept-item::after {
+        /* Scan line overlay */
+        .intercept-image-wrap::after {
             content: '';
             position: absolute;
             inset: 0;
@@ -395,26 +401,35 @@
         }
 
         .intercept-label {
-            position: absolute;
-            bottom: 12px; left: 12px;
             font-family: var(--mono);
             font-size: 9px;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            color: var(--signal-white);
-            background: rgba(8, 8, 8, 0.75);
-            padding: 4px 8px;
-            z-index: 2;
+            color: var(--data-grey);
+            margin-top: 10px;
+            display: block;
         }
 
         .intercept-label.classified { color: var(--hardware-red); }
 
-        .intercept-item:nth-child(1) { grid-column: span 7; grid-row: span 2; }
-        .intercept-item:nth-child(2) { grid-column: span 5; grid-row: span 2; }
-        .intercept-item:nth-child(3) { grid-column: span 4; grid-row: span 1; }
-        .intercept-item:nth-child(4) { grid-column: span 4; grid-row: span 1; }
-        .intercept-item:nth-child(5) { grid-column: span 4; grid-row: span 1; }
-        .intercept-item:nth-child(6) { grid-column: span 12; grid-row: span 1; min-height: 280px; }
+        /* Scroll indicator dots — mobile only */
+        .intercepts-dots {
+            display: none;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .intercepts-dots .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--rule-line);
+            transition: background 0.2s ease;
+        }
+
+        .intercepts-dots .dot.active {
+            background: var(--amber-gold);
+        }
 
         /* ============================================
            RECENT TRANSMISSIONS
@@ -556,21 +571,30 @@
             .status-grid { grid-template-columns: repeat(2, 1fr); }
             .status-metric { border-bottom: 1px solid var(--rule-line); }
             .status-metric:nth-child(2) { border-right: none; }
-            .intercepts-grid { grid-template-columns: 1fr 1fr; }
-            .intercept-item:nth-child(1),
-            .intercept-item:nth-child(2),
-            .intercept-item:nth-child(3),
-            .intercept-item:nth-child(4),
-            .intercept-item:nth-child(5) { grid-column: span 1; grid-row: span 1; }
-            .intercept-item:nth-child(6) { grid-column: span 2; min-height: 200px; }
+
+            /* Horizontal scroll strip on mobile */
+            .intercepts { padding-right: 0; }
+            .intercepts-strip {
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-right: var(--h-pad);
+            }
+            .intercepts-strip::-webkit-scrollbar { display: none; }
+            .intercept-item {
+                flex: 0 0 72vw;
+                scroll-snap-align: start;
+            }
+            .intercepts-dots { display: flex; }
+
             .tx-item { grid-template-columns: 1fr; gap: 8px; }
         }
 
         @media (max-width: 480px) {
             .status-grid { grid-template-columns: 1fr; }
             .status-metric { border-right: none; }
-            .intercepts-grid { grid-template-columns: 1fr; }
-            .intercept-item:nth-child(6) { grid-column: span 1; }
+            .intercept-item { flex: 0 0 80vw; }
             .hero-meta { flex-direction: column; gap: 4px; align-items: flex-start; }
             .meta-divider { display: none; }
         }
@@ -648,33 +672,40 @@
 
     <!-- VISUAL INTERCEPTS -->
     <section class="intercepts reveal" id="intercepts">
-        <h2 class="section-header">VISUAL INTERCEPTS</h2>
-        <div class="intercepts-grid">
+        <h2 class="section-header">// VISUAL INTERCEPTS</h2>
+        <div class="intercepts-strip" id="intercepts-strip">
             <div class="intercept-item">
-                <img src="assets/boff.jpg" alt="BOFF_05 Primary Portrait" loading="lazy">
+                <div class="intercept-image-wrap">
+                    <img src="assets/boff.jpg" alt="BOFF_05 Primary Portrait" loading="lazy">
+                </div>
                 <span class="intercept-label">BOFF_05 // PRIMARY PORTRAIT</span>
             </div>
             <div class="intercept-item">
-                <img src="assets/boff-rec.webp" alt="BOFF_05 Field Reconnaissance" loading="lazy">
-                <span class="intercept-label">BOFF_05 // FIELD RECON</span>
+                <div class="intercept-image-wrap">
+                    <img src="assets/boff-rec.webp" alt="BOFF_05 Field Reconnaissance" loading="lazy">
+                </div>
+                <span class="intercept-label">BOFF_05 // FIELD RECONNAISSANCE</span>
             </div>
             <div class="intercept-item">
-                <img src="assets/not-boff-1.webp" alt="Unidentified Unit" loading="lazy">
-                <span class="intercept-label classified">// UNIT UNIDENTIFIED</span>
+                <div class="intercept-image-wrap">
+                    <img src="assets/not-boff-1.webp" alt="Unidentified Unit" loading="lazy">
+                </div>
+                <span class="intercept-label classified">// UNIT UNIDENTIFIED — SIGNAL INTERCEPTED</span>
             </div>
             <div class="intercept-item">
-                <img src="assets/not-boff-2.webp" alt="Multiple Units Detected" loading="lazy">
-                <span class="intercept-label classified">// CLASSIFICATION PENDING</span>
+                <div class="intercept-image-wrap">
+                    <img src="assets/not-boff-2.webp" alt="Multiple Units Detected" loading="lazy">
+                </div>
+                <span class="intercept-label classified">// MULTIPLE UNITS — CLASSIFICATION PENDING</span>
             </div>
             <div class="intercept-item">
-                <img src="assets/not-boff-3.webp" alt="Unknown Unit" loading="lazy">
+                <div class="intercept-image-wrap">
+                    <img src="assets/not-boff-3.webp" alt="Unknown Unit" loading="lazy">
+                </div>
                 <span class="intercept-label classified">// SECTOR UNREGISTERED</span>
             </div>
-            <div class="intercept-item">
-                <img src="assets/boff-banner.jpg" alt="BOFF_05 Transmission Header" loading="lazy">
-                <span class="intercept-label">BOFF_05 // TRANSMISSION HEADER</span>
-            </div>
         </div>
+        <div class="intercepts-dots" id="intercepts-dots"></div>
     </section>
 
     <div class="rule"></div>
@@ -1202,11 +1233,40 @@
 
 
         // ==========================================
+        // MOBILE SCROLL INDICATOR DOTS
+        // ==========================================
+        function initInterceptsDots() {
+            const strip = document.getElementById('intercepts-strip');
+            const dotsContainer = document.getElementById('intercepts-dots');
+            if (!strip || !dotsContainer) return;
+
+            const items = strip.querySelectorAll('.intercept-item');
+            items.forEach((_, i) => {
+                const dot = document.createElement('span');
+                dot.className = 'dot' + (i === 0 ? ' active' : '');
+                dotsContainer.appendChild(dot);
+            });
+
+            const dots = dotsContainer.querySelectorAll('.dot');
+
+            strip.addEventListener('scroll', () => {
+                const scrollLeft = strip.scrollLeft;
+                const itemWidth = items[0].offsetWidth + 16; // gap
+                const activeIndex = Math.round(scrollLeft / itemWidth);
+                dots.forEach((d, i) => {
+                    d.classList.toggle('active', i === activeIndex);
+                });
+            }, { passive: true });
+        }
+
+
+        // ==========================================
         // INIT
         // ==========================================
         function init() {
             initScrollAnimations();
             initTextGlitch();
+            initInterceptsDots();
         }
 
         if (document.readyState === 'loading') {
