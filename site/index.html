@@ -81,12 +81,47 @@
             color: var(--signal-yellow);
         }
 
-        .nav-link {
+        .nav-signal {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .nav-signal-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 14px;
+        }
+
+        .nav-signal-bars span {
+            width: 3px;
+            background: var(--signal-yellow);
+            border-radius: 1px;
+        }
+
+        .nav-signal-bars span:nth-child(1) { height: 4px; }
+        .nav-signal-bars span:nth-child(2) { height: 7px; }
+        .nav-signal-bars span:nth-child(3) { height: 10px; }
+        .nav-signal-bars span:nth-child(4) { height: 14px; }
+
+        .nav-signal-text {
             font-family: var(--mono);
-            font-size: 11px;
+            font-size: 10px;
+            font-weight: 500;
             letter-spacing: 0.15em;
             text-transform: uppercase;
             color: var(--data-grey);
+        }
+
+        .nav-signal:hover .nav-signal-text { color: var(--signal-yellow); }
+
+        .nav-signal-dot {
+            width: 6px; height: 6px;
+            background: var(--signal-green);
+            border-radius: 50%;
+            animation: dotPulse 2s ease infinite;
         }
 
         /* Shared elements */
@@ -605,7 +640,11 @@
     <!-- NAV -->
     <nav class="nav">
         <span class="nav-brand">BOFF_05</span>
-        <a href="https://x.com/boff_05" target="_blank" class="nav-link">X / @BOFF_05</a>
+        <a href="https://x.com/boff_05" target="_blank" class="nav-signal">
+            <span class="nav-signal-bars"><span></span><span></span><span></span><span></span></span>
+            <span class="nav-signal-text">SIGNAL ACTIVE</span>
+            <span class="nav-signal-dot"></span>
+        </a>
     </nav>
 
     <!-- HERO — DUAL CANVAS SYSTEM -->
