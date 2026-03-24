@@ -1,0 +1,20 @@
+# Brand docs — not for public deployment
+ANTIGRAVITY-OPENCLAW-X-BRIEF.md
+BOFF-DNA-v1.md
+BOFF-SOUL-OPENCLAW.md
+
+# Root image source files (copies are in site/assets)
+*.webp
+*.jpg
+!site/**
+
+# Option files — prototypes, not production
+site/option-*.html
+site/version-b.*
+
+# Old Version A files
+site/main.js
+site/index.css
+
+# OS
+.DS_Store
