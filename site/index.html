@@ -690,6 +690,35 @@
         .tx-footer a { font-family: var(--mono); font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--signal-yellow); }
 
         /* ============================================
+           FIELD REPORTS
+           ============================================ */
+        .field-reports { padding: 120px var(--h-pad); }
+        .fr-list { max-width: 800px; }
+
+        .fr-item {
+            display: grid;
+            grid-template-columns: 140px 1fr auto;
+            gap: 24px;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--rule-line);
+            align-items: start;
+        }
+
+        .fr-meta { display: flex; flex-direction: column; gap: 6px; padding-top: 3px; }
+        .fr-time { font-family: var(--mono); font-size: 11px; color: var(--data-grey); }
+        .fr-pillar { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber-gold); }
+        .fr-text { font-family: var(--mono); font-size: 15px; line-height: 1.8; color: var(--signal-white); }
+        .fr-status { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; padding-top: 5px; color: var(--data-grey); }
+        .fr-status.boff-win { color: #4caf50; }
+        .fr-status.draw { color: var(--signal-yellow); }
+        .fr-loading { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--data-grey); padding: 40px 0; }
+
+        @media (max-width: 600px) {
+            .fr-item { grid-template-columns: 1fr; gap: 8px; }
+            .fr-status { display: none; }
+        }
+
+        /* ============================================
            FIELD BRIEFING
            ============================================ */
         .briefing { padding: 120px var(--h-pad); }
@@ -980,6 +1009,18 @@
         </div>
         <div class="tx-footer">
             <a href="https://x.com/boff_05" target="_blank">VIEW ALL TRANSMISSIONS →</a>
+        </div>
+    </section>
+
+    <div class="rule"></div>
+
+    <!-- FIELD REPORTS — LIVE FROM SUPABASE -->
+    <section class="field-reports reveal" id="field-reports">
+        <h2 class="section-header">FIELD REPORTS</h2>
+        <div class="fr-list" id="fr-list">
+            <div class="fr-loading" id="fr-loading">
+                LOADING FIELD REPORTS...<span class="terminal-cursor"></span>
+            </div>
         </div>
     </section>
 
@@ -1602,6 +1643,55 @@
 
 
         // ==========================================
+        // FIELD REPORTS — LIVE FROM SUPABASE
+        // ==========================================
+        function initFieldReports() {
+            const list = document.getElementById('fr-list');
+            const loading = document.getElementById('fr-loading');
+            if (!list) return;
+
+            fetch('/api/field-reports')
+                .then(res => {
+                    if (!res.ok) throw new Error('API returned ' + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data.reports || data.reports.length === 0) {
+                        if (loading) loading.textContent = 'NO REPORTS YET.';
+                        return;
+                    }
+                    if (loading) loading.remove();
+
+                    data.reports.forEach(r => {
+                        const d = new Date(r.created_at);
+                        const timeStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+
+                        const outcome = r.aura_outcome || '';
+                        let statusClass = '';
+                        let statusLabel = 'ASSESSED';
+                        if (outcome === 'BOFF WIN') { statusClass = 'boff-win'; statusLabel = 'HELD'; }
+                        else if (outcome === 'DRAW') { statusClass = 'draw'; statusLabel = 'DRAW'; }
+
+                        const item = document.createElement('div');
+                        item.className = 'fr-item';
+                        item.innerHTML = `
+                            <div class="fr-meta">
+                                <span class="fr-time">${timeStr}</span>
+                                <span class="fr-pillar">${(r.pillar || '').toUpperCase()}</span>
+                            </div>
+                            <p class="fr-text">${r.candidate_post}</p>
+                            <span class="fr-status ${statusClass}">${statusLabel}</span>
+                        `;
+                        list.appendChild(item);
+                    });
+                })
+                .catch(() => {
+                    if (loading) loading.textContent = 'REPORTS UNAVAILABLE.';
+                });
+        }
+
+
+        // ==========================================
         // FULL-PAGE FILM GRAIN
         // ==========================================
         function initGrain() {
@@ -1737,6 +1827,7 @@
             initTextGlitch();
             initInterceptsDots();
             initLiveFeed();
+            initFieldReports();
             initGrain();
             initTypewriter();
             initReticle();
